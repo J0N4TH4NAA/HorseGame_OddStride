@@ -1,4 +1,4 @@
-#Horse Game
+# Horse Game
 
 This build runs the browser game as a static GitHub Pages site and uses Firebase Realtime Database plus Firebase Anonymous Authentication for multiplayer rooms and public scores. No Render server is required.
 
