@@ -1,0 +1,42 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "rooms": {
+      "$roomId": {
+        ".read": "auth != null",
+        ".write": "auth != null && ((!data.exists() && newData.child('hostUid').val() === auth.uid && newData.child('players').child('0').child('uid').val() === auth.uid) || (data.exists() && !newData.exists() && data.child('hostUid').val() === auth.uid))",
+        "status": {
+          ".write": "auth != null && data.parent().parent().child('hostUid').val() === auth.uid && newData.val() === 'racing' && data.parent().parent().child('status').val() === 'waiting'",
+          ".validate": "newData.isString() && (newData.val() === 'waiting' || newData.val() === 'racing')"
+        },
+        "startAt": {
+          ".write": "auth != null && data.parent().parent().child('hostUid').val() === auth.uid && data.parent().parent().child('status').val() === 'waiting' && newData.isNumber()",
+          ".validate": "newData.isNumber()"
+        },
+        "players": {
+          "$slot": {
+            ".write": "auth != null && data.parent().parent().child('status').val() === 'waiting' && (!data.exists() ? newData.child('uid').val() === auth.uid : data.child('uid').val() === auth.uid)",
+            ".validate": "newData.hasChildren(['uid','name','drawing','slot','joinedAt']) && newData.child('uid').isString() && newData.child('name').isString() && newData.child('drawing').isString() && newData.child('drawing').val().length <= 700000 && newData.child('slot').val() == $slot && newData.child('slot').val() >= 0 && newData.child('slot').val() < 4",
+            "taps": {
+              "$tapId": {
+                ".write": "auth != null && data.parent().parent().child('uid').val() === auth.uid && root.child('rooms').child($roomId).child('status').val() === 'racing'",
+                ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 30000 && newData.val() >= (now - root.child('rooms').child($roomId).child('startAt').val() - 1500) && newData.val() <= (now - root.child('rooms').child($roomId).child('startAt').val() + 1500)"
+              }
+            }
+          }
+        }
+      }
+    },
+    "scores": {
+      "$course": {
+        ".read": "auth != null",
+        ".indexOn": ["timeMs"],
+        "$scoreId": {
+          ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid",
+          ".validate": "newData.child('course').val() === $course && newData.child('name').isString() && newData.child('name').val().length <= 24 && newData.child('timeMs').isNumber() && newData.child('timeMs').val() > 1000 && newData.child('timeMs').val() <= 300000 && newData.child('drawing').isString() && newData.child('drawing').val().length <= 700000"
+        }
+      }
+    }
+  }
+}
