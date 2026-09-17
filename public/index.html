@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>OddStride</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <button class="brand" id="brandButton" type="button">ODDSTRIDE</button>
+      <div class="top-actions">
+        <button class="icon-btn" id="soundBtn" type="button" aria-label="Toggle sound">Sound: On</button>
+        <button class="icon-btn" id="helpBtn" type="button">How to play</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="screen active" id="homeScreen">
+        <div class="hero-copy">
+          <p class="eyebrow">HAND-DRAWN RACING</p>
+          <h1>Draw a creature.<br />Make it run.</h1>
+          <p class="lede">Your drawing becomes the racer. Tap in rhythm to push it across the finish line.</p>
+        </div>
+
+        <div class="setup-grid">
+          <div class="card drawing-card">
+            <div class="card-head">
+              <div>
+                <h2>Your racer</h2>
+                <p>Freehand is fine. Weird is fine.</p>
+              </div>
+              <button class="small-btn" id="clearDrawingBtn" type="button">Clear</button>
+            </div>
+            <canvas id="drawCanvas" width="900" height="520"></canvas>
+            <div class="drawing-tools">
+              <button class="tool active" id="penTool" type="button">Pen</button>
+              <button class="tool" id="eraserTool" type="button">Eraser</button>
+              <label class="range-label">Size <input id="brushSize" type="range" min="2" max="24" value="7" /></label>
+            </div>
+            <label class="field-label">Racer name</label>
+            <input id="nameInput" maxlength="24" value="Barely a Horse" />
+            <p class="canvas-note">Only your drawing is used in races. The white drawing paper does not travel with your horse.</p>
+          </div>
+
+          <aside class="setup-side">
+            <div class="card">
+              <h2>Choose a race</h2>
+              <div class="race-choice active" data-course="sprint">
+                <div><strong>100 m Sprint</strong><span>Straight track. Pure speed.</span></div>
+                <span class="radio-dot"></span>
+              </div>
+              <div class="race-choice" data-course="obstacles">
+                <div><strong>85 m Mixed Challenge</strong><span>Steps and hurdles change the pace.</span></div>
+                <span class="radio-dot"></span>
+              </div>
+            </div>
+
+            <div class="card">
+              <h2>Racing settings</h2>
+              <label class="field-label">Leg length</label>
+              <input id="legLength" type="range" min="60" max="140" value="100" />
+              <div class="range-readout"><span>Short</span><strong id="legLengthValue">100%</strong><span>Long</span></div>
+              <label class="field-label">Opponents</label>
+              <select id="opponentSelect">
+                <option value="3">3 computer racers</option>
+                <option value="5">5 computer racers</option>
+              </select>
+            </div>
+
+            <button class="primary-btn" id="startBtn" type="button">Start Race</button>
+            <button class="friend-btn" id="multiplayerBtn" type="button"><span>PLAY WITH FRIENDS</span><small>Race up to 4 people in one room</small></button>
+            <button class="secondary-btn" id="leaderboardBtn" type="button">Leaderboard</button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="screen" id="multiplayerScreen">
+        <div class="page-title-row">
+          <div><p class="eyebrow">UP TO 4 PLAYERS</p><h2>Battle your friends</h2></div>
+          <button class="secondary-btn" id="multiplayerBackBtn" type="button">Back</button>
+        </div>
+
+        <div class="card server-config-card" id="firebaseConfigCard">
+          <div>
+            <p class="eyebrow">FIREBASE MULTIPLAYER</p>
+            <h2>Online room service</h2>
+            <p>Multiplayer rooms use Firebase Realtime Database. Once Firebase is configured, this page works from GitHub Pages on laptops and phones.</p>
+          </div>
+          <p class="server-config-status" id="firebaseConfigStatus"></p>
+        </div>
+
+        <div class="multi-grid">
+          <div class="card">
+            <p class="eyebrow">CREATE A ROOM</p>
+            <h2>Host the race</h2>
+            <p>Create a room using your current horse, race and leg-length settings.</p>
+            <button class="primary-btn" id="createRoomBtn" type="button">Create Room</button>
+          </div>
+          <div class="card">
+            <p class="eyebrow">JOIN A ROOM</p>
+            <h2>Join a friend</h2>
+            <p>Enter the four-letter room code your friend gives you.</p>
+            <input id="joinCodeInput" maxlength="6" placeholder="ABCD" autocomplete="off" />
+            <button class="secondary-btn" id="joinRoomBtn" type="button">Join Room</button>
+          </div>
+        </div>
+
+        <div class="card multiplayer-lobby hidden" id="multiplayerLobby">
+          <div class="lobby-head">
+            <div>
+              <p class="eyebrow">ROOM CODE</p>
+              <div class="room-code" id="roomCodeDisplay">----</div>
+              <p id="lobbyCourseText">Waiting for players...</p>
+            </div>
+            <div class="lobby-head-actions">
+              <button class="secondary-btn" id="copyRoomBtn" type="button">Copy Code</button>
+              <button class="secondary-btn" id="copyJoinUrlBtn" type="button">Copy Phone Link</button>
+            </div>
+          </div>
+          <div class="lobby-share-grid">
+            <div class="qr-card">
+              <div class="qr-title">SCAN TO JOIN</div>
+              <div class="qr-wrap"><img id="roomQr" alt="QR code for joining the race" /></div>
+              <p id="joinUrlText">Open the phone link on a phone connected to the same Wi-Fi.</p>
+            </div>
+            <div>
+              <div class="player-list" id="playerList"></div>
+              <div class="host-start-card" id="hostStartCard">
+                <div>
+                  <p class="eyebrow">HOST CONTROLS</p>
+                  <strong>Start the race for everyone.</strong>
+                  <p id="hostStartHint">Waiting for at least 2 players.</p>
+                </div>
+                <button class="primary-btn host-start-btn" id="startMultiplayerBtn" type="button">START RACE</button>
+              </div>
+              <button class="secondary-btn leave-room-btn" id="leaveRoomBtn" type="button">Leave Room</button>
+            </div>
+          </div>
+          <p class="lobby-status" id="lobbyStatus">Waiting for at least 2 players.</p>
+        </div>
+      </section>
+
+      <section class="screen" id="leaderboardScreen">
+        <div class="page-title-row">
+          <div><p class="eyebrow">PUBLIC TIMES</p><h2>Leaderboard</h2></div>
+          <button class="secondary-btn" id="leaderboardBackBtn" type="button">Back</button>
+        </div>
+        <div class="tabs">
+          <button class="tab active" data-course-tab="sprint" type="button">100 m Sprint</button>
+          <button class="tab" data-course-tab="obstacles" type="button">85 m Challenge</button>
+        </div>
+        <div class="card leaderboard-card">
+          <div class="leaderboard-head"><span>Rank</span><span>Racer</span><span>Time</span></div>
+          <div id="leaderboardBody"></div>
+        </div>
+      </section>
+
+      <section class="screen race-screen" id="raceScreen">
+        <div class="race-hud">
+          <div><span class="hud-label" id="hudMode">COURSE</span><strong id="hudCourse">100 m Sprint</strong><small id="multiplayerHudLabel"></small></div>
+          <div class="distance-wrap"><span id="distanceText">0 / 100 m</span><div class="progress"><span id="progressBar"></span></div></div>
+          <button class="secondary-btn small" id="raceExitBtn" type="button">Exit</button>
+        </div>
+        <div class="race-stage-wrap">
+          <canvas id="raceCanvas" width="1400" height="760"></canvas>
+          <div class="countdown" id="countdown">3</div>
+          <div class="race-result-pop" id="racePop"></div>
+        </div>
+        <div class="controls-area">
+          <div class="pace-meter"><span>Pace</span><div><i id="paceBar"></i></div></div>
+          <button class="giddy-btn" id="giddyBtn" type="button">GIDDY UP!</button>
+          <div class="key-hint" id="keyHint">Tap repeatedly or press Space in a steady rhythm.</div>
+        </div>
+        <div class="mobile-multi-ui" id="mobileMultiUi">
+          <div class="mobile-race-top">
+            <div><span class="mobile-label">ROOM</span><strong id="mobileRoomCode">----</strong></div>
+            <div class="mobile-place"><span class="mobile-label">PLACE</span><strong id="mobilePlace">-</strong></div>
+          </div>
+          <div class="mobile-own-horse">
+            <img id="mobileHorseImage" alt="Your drawn horse" />
+          </div>
+          <div class="mobile-distance"><strong id="mobileDistanceText">0.0 / 100 m</strong><div class="progress"><span id="mobileProgressBar"></span></div></div>
+          <button class="mobile-giddy-btn" id="mobileGiddyBtn" type="button">GIDDY UP!</button>
+          <p class="mobile-tap-hint">Tap in a steady rhythm. Everyone races at the same time.</p>
+          <div class="mobile-standings" id="mobileStandings"></div>
+        </div>
+      </section>
+
+      <section class="screen" id="resultScreen">
+        <div class="result-layout">
+          <div class="result-card card">
+            <p class="eyebrow" id="resultEyebrow">FINISHED</p>
+            <h2 id="resultTitle">Good run.</h2>
+            <div class="result-time" id="resultTime">12.34 s</div>
+            <div class="result-position" id="resultPosition">1st place</div>
+            <p id="resultSubcopy">Your racer crossed the line.</p>
+            <div class="result-actions">
+              <button class="primary-btn" id="againBtn" type="button">Run It Again</button>
+              <button class="secondary-btn" id="newRacerBtn" type="button">Draw Again</button>
+              <button class="secondary-btn" id="resultLeaderboardBtn" type="button">Leaderboard</button>
+              <button class="secondary-btn" id="saveImageBtn" type="button">Save Result Image</button>
+            </div>
+          </div>
+          <div class="share-preview card">
+            <canvas id="shareCanvas" width="1000" height="700"></canvas>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="helpDialog">
+    <div class="dialog-inner">
+      <button class="dialog-close" id="helpClose" type="button">×</button>
+      <p class="eyebrow">HOW TO PLAY</p>
+      <h2>Draw, then cheer.</h2>
+      <p>Draw a creature on the canvas. Start the race. Tap GIDDY UP repeatedly with a steady rhythm. Strong, consistent taps produce speed while poor timing creates fatigue.</p>
+      <p>Your race horse uses the transparent part of your drawing, so the white drawing paper never appears on the track.</p>
+      <p>In a friend room, up to four people can join. Each person uses their own device and their own GIDDY UP button. The race starts for everyone at the same time.</p>
+    </div>
+  </dialog>
+
+  <script src="firebase-config.js?v=1"></script>
+  <script type="module" src="firebase-client.js?v=1"></script>
+  <script src="game.js?v=10"></script>
+</body>
+</html>
